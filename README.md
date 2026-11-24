@@ -56,6 +56,7 @@ Las pruebas crean datos ficticios propios, ejercitan movimientos monetarios de p
 - [Contratos API](docs/contratos.md); Swagger en `/api/{servicio}/docs/`.
 - [Guía de presentación](docs/guia-presentacion.md).
 - [Auditoría final](docs/auditoria.md) y resultados reales en evidencias.
+- [Registro de almacenamiento](docs/almacenamiento.md), con temporales locales y límites de limpieza.
 
 Los cinco MVP están implementados para demostración local. El informe académico está a cargo de otro integrante. No hay integración financiera real ni desembolso de préstamos. La aprobación conserva la obligación; no acredita saldo. Las listas tienen un límite de 200 registros en la demostración.
 
