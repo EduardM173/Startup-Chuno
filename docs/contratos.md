@@ -10,7 +10,7 @@ Cada servicio expone `/health`, `/openapi.json` y `/docs/`. Las rutas de negocio
 | Clientes | POST /auth/logout | Revoca las sesiones del usuario |
 | Clientes | POST /auth/password | current, password; obliga a volver a ingresar |
 | Clientes | GET /me | Usuario, clientId opcional, rol y cambio obligatorio |
-| Clientes | PATCH /me | phone y address del cliente autenticado |
+| Clientes | PATCH /me | phone, address y email de contacto del cliente autenticado (no cambia el login) |
 | Clientes | GET /clients?q= | Búsqueda administrativa, máximo 200 |
 | Clientes | POST /clients | document, names, surnames, email, phone, address; sin cuenta ni usuario |
 | Clientes | GET/PATCH/DELETE /clients/{id} | Detalle, cambios permitidos o baja con verificaciones |
@@ -54,3 +54,5 @@ Una transferencia propia utiliza PROPIA; una de terceros TERCERO. Para INTERBANC
 Clientes ofrece POST /internal/session y GET /internal/clients/{id}. Cuentas ofrece POST /internal/operations para TRANSFERENCIA o RESERVA; GET /internal/operations/{id}; POST /internal/operations/{id}/settle con confirm booleano; y consultas de cuentas y obligaciones. La operación interna exige UUID de operación y actor, cliente, cuenta y amount. Transferencia agrega destinationId. Estas rutas no aceptan un token de cliente como autorización interna.
 
 El sandbox expone GET /providers, /banks, /beneficiary, /obligations, /operations/{id} y POST /operations. La ejecución exige id único, kind PAGO/INTERBANCARIA, amount, reference, provider y beneficiary. Un proveedor real debe ofrecer equivalentes de consulta por identificador e idempotencia antes de sustituir SANDBOX_URL. También deben configurarse credenciales por adaptador, TLS, validación de firma de respuestas y reglas contractuales del proveedor. Una API con resultados inciertos sin consulta de estado necesita una estrategia adicional; no debe declararse compatible solo por cambiar la URL.
+
+El perfil devuelve contactEmail separado del email del usuario y lastAccess obtenido de auditorías INICIO_SESION persistidas. Los accesos anteriores a la introducción del registro no se reconstruyen artificialmente.

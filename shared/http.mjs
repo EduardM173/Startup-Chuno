@@ -45,7 +45,7 @@ export function finish(app,name,paths) {
  const bodies={
   '/auth/login':{email:{...string,example:'admin@chuno.demo'},password:{...string,format:'password'}},
   '/auth/password':{current:{...string,format:'password'},password:{...string,minLength:10,format:'password'}},
-  '/me':{phone:string,address:string},
+  '/me':{phone:string,address:string,email:{...string,format:'email'}},
   '/clients':{document:string,names:string,surnames:string,email:{...string,format:'email'},phone:string,address:string},
   '/clients/{id}':{document:string,names:string,surnames:string,email:string,phone:string,address:string},
   '/clients/{id}/access':{password:{...string,minLength:10,format:'password'},email:string,status:{type:'string',enum:['ACTIVO','BLOQUEADO','INACTIVO']}},
