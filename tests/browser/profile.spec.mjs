@@ -1,0 +1,17 @@
+import {test,expect} from '@playwright/test';
+const base='http://localhost:8080';
+async function api(path,body,token,method='POST'){const r=await fetch(`${base}/api/clientes${path}`,{method,headers:{'Content-Type':'application/json',...(token?{Authorization:`Bearer ${token}`}:{})},body:body?JSON.stringify(body):undefined});const result=await r.json();expect(r.ok,JSON.stringify(result)).toBeTruthy();return result}
+test('Perfil contacto persistente seguridad y sesiones revocadas',async({page})=>{
+ const suffix=Date.now();const email=`perfil-${suffix}@chuno.demo`;const admin=await api('/auth/login',{email:'admin@chuno.demo',password:'AdminChuno2026!'});
+ const c=await api('/clients',{document:`PERFIL-${suffix}`,names:'Ana',surnames:'Prueba Perfil',email,phone:'70000000',address:'Dirección de prueba'},admin.token);
+ await api(`/clients/${c.id}/access`,{password:'TemporalPerfil2026!'},admin.token);
+ let session=await api('/auth/login',{email,password:'TemporalPerfil2026!'});await api('/auth/password',{current:'TemporalPerfil2026!',password:'PerfilInicial2026!'},session.token);
+ session=await api('/auth/login',{email,password:'PerfilInicial2026!'});expect(session.user.lastAccess).toBeTruthy();
+ await page.goto('/');await page.getByLabel('Correo electrónico',{exact:true}).fill(email);await page.getByLabel('Contraseña',{exact:true}).fill('PerfilInicial2026!');await page.getByRole('button',{name:'Iniciar sesión',exact:true}).click();await page.getByRole('button',{name:'Mi perfil',exact:true}).click();await expect(page.getByRole('heading',{name:'Mi perfil y seguridad'})).toBeVisible();
+ await page.getByRole('button',{name:'Editar teléfono'}).click();await page.getByLabel('Teléfono',{exact:true}).fill('71112223');await page.getByRole('button',{name:'Guardar contacto'}).click();await expect(page.locator('.profile-message[role=status]')).toContainText('actualizados');
+ await page.getByRole('button',{name:'Editar correo de contacto'}).click();const contact=`contacto-${suffix}@chuno.demo`;await page.getByLabel('Correo de contacto',{exact:true}).fill(contact);await page.getByRole('button',{name:'Guardar contacto'}).click();await expect(page.locator('.profile-row output').filter({hasText:contact})).toBeVisible();
+ const me=await api('/me',undefined,session.token,'GET');expect(me.phone).toBe('71112223');expect(me.contactEmail).toBe(contact);expect(me.email).toBe(email);
+ await page.getByLabel('Contraseña actual',{exact:true}).fill('PerfilInicial2026!');await page.getByLabel('Nueva contraseña',{exact:true}).fill('PerfilFinal2026!');await page.getByLabel('Confirmar nueva contraseña',{exact:true}).fill('NoCoincide2026!');await page.getByRole('button',{name:'Actualizar contraseña'}).click();await expect(page.getByRole('alert')).toContainText('no coincide');
+ await page.getByLabel('Confirmar nueva contraseña',{exact:true}).fill('PerfilFinal2026!');await page.screenshot({path:'.cache/perfil-desktop.png',fullPage:true});await page.setViewportSize({width:390,height:844});await page.screenshot({path:'.cache/perfil-mobile.png',fullPage:true});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();await page.getByRole('button',{name:'Actualizar contraseña'}).click();await expect(page.getByRole('button',{name:'Iniciar sesión',exact:true})).toBeVisible();
+ const old=await fetch(`${base}/api/clientes/me`,{headers:{Authorization:`Bearer ${session.token}`}});expect(old.status).toBe(401);await api('/auth/login',{email,password:'PerfilFinal2026!'});
+});

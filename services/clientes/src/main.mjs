@@ -7,11 +7,11 @@ const db=new PrismaClient(); const app=appFor('clientes',db);
 const fields={document:z.string().min(5).max(30),names:z.string().min(2).max(80),surnames:z.string().min(2).max(80),email:z.string().email().max(120).transform(v=>v.toLowerCase()),phone:z.string().min(7).max(25),address:z.string().min(4).max(200)};
 const accessView=u=>u?{id:u.id,email:u.email,status:u.status,mustChangePassword:u.mustChangePassword}:null;
 const clientView=c=>{const {user,...rest}=c;return {...rest,active:c.status==='ACTIVO',deleted:c.status==='BAJA',access:accessView(user)};};
-const userView=u=>({id:u.id,clientId:u.clientId,email:u.email,role:u.role,status:u.status,mustChangePassword:u.mustChangePassword,names:u.client?.names||u.names,surnames:u.client?.surnames||u.surnames,phone:u.client?.phone||'',address:u.client?.address||'',document:u.client?.document||'No aplica'});
+const userView=u=>({id:u.id,clientId:u.clientId,email:u.email,role:u.role,status:u.status,mustChangePassword:u.mustChangePassword,names:u.client?.names||u.names,surnames:u.client?.surnames||u.surnames,phone:u.client?.phone||'',address:u.client?.address||'',document:u.client?.document||'No aplica',contactEmail:u.client?.email||'',lastAccess:u.lastAccess||null});
 async function session(token){
  let payload;try{payload=jwt.verify(token,process.env.JWT_SECRET,{algorithms:['HS256'],issuer:'chuno',audience:'chuno-web'});}catch{fail(401,'Sesión inválida o expirada');}
  const u=await db.user.findUnique({where:{id:payload.sub},include:{client:true}});
- if(!u||u.status!=='ACTIVO'||u.version!==payload.ver||(u.role==='CLIENTE'&&(!u.client||u.client.status!=='ACTIVO')))fail(401,'Sesión revocada, usuario bloqueado o cliente de baja');return userView(u);
+ if(!u||u.status!=='ACTIVO'||u.version!==payload.ver||(u.role==='CLIENTE'&&(!u.client||u.client.status!=='ACTIVO')))fail(401,'Sesión revocada, usuario bloqueado o cliente de baja');const access=await db.audit.findFirst({where:{actor:u.id,action:'INICIO_SESION'},orderBy:{createdAt:'desc'}});return userView({...u,lastAccess:access?.createdAt});
 }
 async function auth(req,res,next){req.user=await session((req.get('Authorization')||'').replace(/^Bearer /,''));if(req.user.mustChangePassword&&!['/auth/password','/auth/logout','/me'].includes(req.path))fail(403,'Debe cambiar su contraseña temporal antes de operar');next();}
 async function audit(tx,user,action,resource){await tx.audit.create({data:{actor:user.id,action,resource}});}
@@ -20,6 +20,7 @@ app.get('/internal/clients/:id',internal,async(req,res)=>{const c=await db.clien
 app.post('/auth/login',rateLimit({windowMs:60000,limit:20,standardHeaders:'draft-8',legacyHeaders:false}),async(req,res)=>{
  const b=z.object({email:z.string().email(),password:z.string().max(128)}).strict().parse(req.body);const u=await db.user.findUnique({where:{email:b.email.toLowerCase()},include:{client:true}});
  if(!u||!await bcrypt.compare(b.password,u.password)||u.status!=='ACTIVO'||(u.role==='CLIENTE'&&u.client?.status!=='ACTIVO'))fail(401,'Credenciales inválidas o acceso no activo');
+ const access=await db.audit.create({data:{actor:u.id,action:'INICIO_SESION',resource:u.id}});u.lastAccess=access.createdAt;
  const token=jwt.sign({ver:u.version},process.env.JWT_SECRET,{algorithm:'HS256',subject:u.id,expiresIn:'30m',issuer:'chuno',audience:'chuno-web'});res.json({token,user:userView(u)});
 });
 app.post('/auth/logout',auth,async(req,res)=>{await db.user.update({where:{id:req.user.id},data:{version:{increment:1}}});res.json({message:'Sesión cerrada'});});
@@ -30,8 +31,8 @@ app.post('/auth/password',auth,async(req,res)=>{
 });
 app.get('/me',auth,(req,res)=>res.json(req.user));
 app.patch('/me',auth,async(req,res)=>{
- const b=z.object({phone:fields.phone,address:fields.address}).partial().strict().parse(req.body);if(!req.user.clientId)fail(422,'El administrador no tiene ficha de cliente');
- const c=await db.$transaction(async tx=>{const c=await tx.client.update({where:{id:req.user.clientId},data:b});await audit(tx,req.user,'CONTACTO',c.id);return c;});res.json({...req.user,phone:c.phone,address:c.address});
+ const b=z.object({phone:fields.phone,address:fields.address,email:fields.email}).partial().strict().parse(req.body);if(!req.user.clientId)fail(422,'El administrador no tiene ficha de cliente');
+ const c=await db.$transaction(async tx=>{const c=await tx.client.update({where:{id:req.user.clientId},data:b});await audit(tx,req.user,'CONTACTO',c.id);return c;});res.json({...req.user,phone:c.phone,address:c.address,contactEmail:c.email});
 });
 app.get('/clients',auth,admin,async(req,res)=>{const q=String(req.query.q||'').slice(0,100);res.json((await db.client.findMany({where:{OR:['names','surnames','email','document'].map(k=>({[k]:{contains:q,mode:'insensitive'}}))},include:{user:true},orderBy:{createdAt:'desc'},take:200})).map(clientView));});
 app.post('/clients',auth,admin,async(req,res)=>{
@@ -39,7 +40,7 @@ app.post('/clients',auth,admin,async(req,res)=>{
 });
 app.get('/clients/:id',auth,async(req,res)=>{owner(req.user,req.params.id);const c=await db.client.findUnique({where:{id:id.parse(req.params.id)},include:{user:true}});if(!c)fail(404,'Cliente no encontrado');res.json(clientView(c));});
 app.patch('/clients/:id',auth,async(req,res)=>{
- const clientId=id.parse(req.params.id);owner(req.user,clientId);const b=z.object(req.user.role==='ADMIN'?fields:{phone:fields.phone,address:fields.address}).partial().strict().parse(req.body);
+ const clientId=id.parse(req.params.id);owner(req.user,clientId);const b=z.object(req.user.role==='ADMIN'?fields:{phone:fields.phone,address:fields.address,email:fields.email}).partial().strict().parse(req.body);
  const c=await db.client.findUnique({where:{id:clientId}});if(!c||c.status==='BAJA')fail(409,'Cliente de baja');
  res.json(clientView(await db.$transaction(async tx=>{const c=await tx.client.update({where:{id:clientId},data:b,include:{user:true}});await audit(tx,req.user,'MODIFICACION_CLIENTE',clientId);return c;})));
 });
