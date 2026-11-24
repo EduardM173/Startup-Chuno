@@ -1,0 +1,21 @@
+Contenedores
+NAME                     IMAGE                  COMMAND                  SERVICE          CREATED              STATUS                    PORTS
+chuno-clientes-1         chuno-clientes         "docker-entrypoint.s…"   clientes         About a minute ago   Up 55 seconds (healthy)
+chuno-cuentas-1          chuno-cuentas          "docker-entrypoint.s…"   cuentas          About a minute ago   Up 56 seconds (healthy)
+chuno-pagos-1            chuno-pagos            "docker-entrypoint.s…"   pagos            About a minute ago   Up 54 seconds (healthy)
+chuno-postgres-1         postgres:18-alpine     "docker-entrypoint.s…"   postgres         21 minutes ago       Up 20 minutes (healthy)   5432/tcp
+chuno-prestamos-1        chuno-prestamos        "docker-entrypoint.s…"   prestamos        About a minute ago   Up 55 seconds (healthy)
+chuno-sandbox-1          chuno-sandbox          "docker-entrypoint.s…"   sandbox          About a minute ago   Up 55 seconds (healthy)
+chuno-transferencias-1   chuno-transferencias   "docker-entrypoint.s…"   transferencias   About a minute ago   Up 55 seconds (healthy)
+chuno-web-1              chuno-web              "/docker-entrypoint.…"   web              59 seconds ago       Up 44 seconds (healthy)   127.0.0.1:8080->80/tcp
+
+Bases y propietarios
+      datname      |        owner
+-------------------+---------------------
+ clientes_db       | clientes_user
+ cuentas_db        | cuentas_user
+ pagos_db          | pagos_user
+ prestamos_db      | prestamos_user
+ sandbox_db        | sandbox_user
+ transferencias_db | transferencias_user
+(6 rows)

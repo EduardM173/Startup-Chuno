@@ -1,0 +1,13 @@
+clientes: acceso propio OK
+clientes: 5 accesos cruzados rechazados
+cuentas: acceso propio OK
+cuentas: 5 accesos cruzados rechazados
+pagos: acceso propio OK
+pagos: 5 accesos cruzados rechazados
+transferencias: acceso propio OK
+transferencias: 5 accesos cruzados rechazados
+prestamos: acceso propio OK
+prestamos: 5 accesos cruzados rechazados
+sandbox: acceso propio OK
+sandbox: 5 accesos cruzados rechazados
+6 bases accesibles por su propietario y 30 accesos cruzados rechazados.

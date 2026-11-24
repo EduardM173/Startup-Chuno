@@ -1,0 +1,193 @@
+name: chuno
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Ejecute scripts/configure.ps1}
+      CLIENTES_DB_PASSWORD: ${CLIENTES_DB_PASSWORD}
+      CUENTAS_DB_PASSWORD: ${CUENTAS_DB_PASSWORD}
+      PAGOS_DB_PASSWORD: ${PAGOS_DB_PASSWORD}
+      TRANSFERENCIAS_DB_PASSWORD: ${TRANSFERENCIAS_DB_PASSWORD}
+      PRESTAMOS_DB_PASSWORD: ${PRESTAMOS_DB_PASSWORD}
+      SANDBOX_DB_PASSWORD: ${SANDBOX_DB_PASSWORD}
+    volumes:
+      - chuno-data:/var/lib/postgresql
+      - ./infrastructure/postgres/init.sh:/docker-entrypoint-initdb.d/10-chuno.sh:ro
+    networks: [backend]
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U postgres]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  clientes:
+    build:
+      context: .
+      dockerfile: services/clientes/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://clientes_user:${CLIENTES_DB_PASSWORD}@postgres:5432/clientes_db
+      JWT_SECRET: ${JWT_SECRET}
+      SERVICE_KEY: ${SERVICE_KEY}
+      CLIENTES_URL: http://clientes:3000
+      CUENTAS_URL: http://cuentas:3000
+      PRESTAMOS_URL: http://prestamos:3000
+      PAGOS_URL: http://pagos:3000
+      TRANSFERENCIAS_URL: http://transferencias:3000
+      SANDBOX_URL: ${SANDBOX_URL:-http://sandbox:3000}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [backend]
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+  cuentas:
+    build:
+      context: .
+      dockerfile: services/cuentas/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://cuentas_user:${CUENTAS_DB_PASSWORD}@postgres:5432/cuentas_db
+      JWT_SECRET: ${JWT_SECRET}
+      SERVICE_KEY: ${SERVICE_KEY}
+      CLIENTES_URL: http://clientes:3000
+      CUENTAS_URL: http://cuentas:3000
+      PRESTAMOS_URL: http://prestamos:3000
+      PAGOS_URL: http://pagos:3000
+      TRANSFERENCIAS_URL: http://transferencias:3000
+      SANDBOX_URL: ${SANDBOX_URL:-http://sandbox:3000}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [backend]
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+  pagos:
+    build:
+      context: .
+      dockerfile: services/pagos/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://pagos_user:${PAGOS_DB_PASSWORD}@postgres:5432/pagos_db
+      JWT_SECRET: ${JWT_SECRET}
+      SERVICE_KEY: ${SERVICE_KEY}
+      CLIENTES_URL: http://clientes:3000
+      CUENTAS_URL: http://cuentas:3000
+      PRESTAMOS_URL: http://prestamos:3000
+      PAGOS_URL: http://pagos:3000
+      TRANSFERENCIAS_URL: http://transferencias:3000
+      SANDBOX_URL: ${SANDBOX_URL:-http://sandbox:3000}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [backend]
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+  transferencias:
+    build:
+      context: .
+      dockerfile: services/transferencias/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://transferencias_user:${TRANSFERENCIAS_DB_PASSWORD}@postgres:5432/transferencias_db
+      JWT_SECRET: ${JWT_SECRET}
+      SERVICE_KEY: ${SERVICE_KEY}
+      CLIENTES_URL: http://clientes:3000
+      CUENTAS_URL: http://cuentas:3000
+      PRESTAMOS_URL: http://prestamos:3000
+      PAGOS_URL: http://pagos:3000
+      TRANSFERENCIAS_URL: http://transferencias:3000
+      SANDBOX_URL: ${SANDBOX_URL:-http://sandbox:3000}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [backend]
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+  prestamos:
+    build:
+      context: .
+      dockerfile: services/prestamos/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://prestamos_user:${PRESTAMOS_DB_PASSWORD}@postgres:5432/prestamos_db
+      JWT_SECRET: ${JWT_SECRET}
+      SERVICE_KEY: ${SERVICE_KEY}
+      CLIENTES_URL: http://clientes:3000
+      CUENTAS_URL: http://cuentas:3000
+      PRESTAMOS_URL: http://prestamos:3000
+      PAGOS_URL: http://pagos:3000
+      TRANSFERENCIAS_URL: http://transferencias:3000
+      SANDBOX_URL: ${SANDBOX_URL:-http://sandbox:3000}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [backend]
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+  sandbox:
+    build:
+      context: .
+      dockerfile: infrastructure/sandbox/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://sandbox_user:${SANDBOX_DB_PASSWORD}@postgres:5432/sandbox_db
+      JWT_SECRET: ${JWT_SECRET}
+      SERVICE_KEY: ${SERVICE_KEY}
+      CLIENTES_URL: http://clientes:3000
+      CUENTAS_URL: http://cuentas:3000
+      PRESTAMOS_URL: http://prestamos:3000
+      PAGOS_URL: http://pagos:3000
+      TRANSFERENCIAS_URL: http://transferencias:3000
+      SANDBOX_URL: ${SANDBOX_URL:-http://sandbox:3000}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [backend]
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+  web:
+    build:
+      context: .
+      dockerfile: infrastructure/gateway/Dockerfile
+    ports: ["127.0.0.1:${WEB_PORT:-8080}:80"]
+    networks: [backend, edge]
+    depends_on:
+      clientes:
+        condition: service_healthy
+      cuentas:
+        condition: service_healthy
+      pagos:
+        condition: service_healthy
+      transferencias:
+        condition: service_healthy
+      prestamos:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD, wget, -q, -O, /dev/null, http://127.0.0.1/]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+networks:
+  backend:
+    internal: true
+  edge:
+volumes:
+  chuno-data:

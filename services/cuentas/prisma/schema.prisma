@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+  output = "../generated/client"
+}
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+model Account {
+ id String @id @default(uuid())
+ number String @unique
+ clientId String
+ alias String
+ type String @default("AHORRO")
+ currency String @default("BOB")
+ balance Decimal @default(0) @db.Decimal(18,2)
+ reserved Decimal @default(0) @db.Decimal(18,2)
+ status String @default("ACTIVA")
+ createdAt DateTime @default(now())
+ movements Movement[]
+}
+model Movement {
+ id String @id @default(uuid())
+ accountId String
+ account Account @relation(fields:[accountId],references:[id])
+ operationId String
+ kind String
+ amount Decimal @db.Decimal(18,2)
+ balanceAfter Decimal @db.Decimal(18,2)
+ description String
+ actorId String
+ createdAt DateTime @default(now())
+ @@unique([operationId, accountId, kind])
+}
+model Operation {
+ id String @id
+ actorId String
+ fingerprint String
+ clientId String
+ accountId String
+ destinationId String?
+ amount Decimal @db.Decimal(18,2)
+ kind String
+ status String
+ createdAt DateTime @default(now())
+}
+
+model Audit {
+ id String @id @default(uuid())
+ actor String
+ action String
+ resource String
+ createdAt DateTime @default(now())
+}

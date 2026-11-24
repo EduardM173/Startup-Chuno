@@ -1,0 +1,11 @@
+node_modules
+**/node_modules
+**/generated
+.git
+.env
+docs/evidencias
+frontend/dist
+test-results
+
+.cache
+test-results

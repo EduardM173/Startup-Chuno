@@ -1,0 +1,11 @@
+node_modules/
+**/generated/
+frontend/dist/
+.env
+*.log
+test-results/
+playwright-report/
+.cache/
+*.zip
+__pycache__/
+*.tsbuildinfo

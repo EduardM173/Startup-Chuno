@@ -1,0 +1,27 @@
+generator client {
+  provider = "prisma-client-js"
+  output = "../generated/client"
+}
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+model Obligation {
+ id String @id
+ provider String
+ reference String
+ customer String
+ amount Decimal @db.Decimal(18,2)
+ paid Boolean @default(false)
+ @@unique([provider,reference])
+}
+model ExternalOperation {
+ id String @id
+ externalId String @unique @default(uuid())
+ fingerprint String
+ kind String
+ status String
+ amount Decimal @db.Decimal(18,2)
+ reference String
+ createdAt DateTime @default(now())
+}

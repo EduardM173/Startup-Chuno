@@ -1,0 +1,36 @@
+▶ CHUNO · verificación bancaria integrada
+  ✔ Cinco APIs saludables y OpenAPI disponible (131.0114ms)
+  ✔ Inicio de sesión ADMIN sin registro de cliente e inválidos rechazados (864.7898ms)
+  ✔ Alta de cliente sin cuenta ni acceso y rechazo de duplicados (48.6458ms)
+  ✔ Consulta, búsqueda y modificación administrativa (38.7106ms)
+  ✔ Habilitación única y cambio obligatorio de contraseña temporal (5568.4676ms)
+  ✔ Abrir cuentas en cero y validar propietario existente (114.5491ms)
+  ✔ Depósito y retiro autorizados, sin sobregiro (108.8115ms)
+  ✔ Saldo y número no son editables; alias sí (41.9141ms)
+  ✔ Autorización: recursos ajenos, rol, CI, caja y endpoints internos (65.9227ms)
+  ✔ El administrador no puede ordenar transferencias ni pagos por clientes (208.2221ms)
+  ✔ Transferencias propias ACID, tercero y saldos resultantes (215.7397ms)
+  ✔ Rechazar misma cuenta, monto inválido y fondos insuficientes (136.8279ms)
+  ✔ Reintentos con misma clave no duplican y rechazan datos distintos (138.042ms)
+  ✔ Cuenta bloqueada no permite operaciones; usuario bloqueado no bloquea cuenta (608.4428ms)
+  ✔ Consultar deuda y pagar una sola vez (229.5039ms)
+  ✔ Pago sin fondos y rechazo externo liberan fondos exactamente una vez (241.926ms)
+  ✔ Timeout de pago conserva reserva, bloquea cierre y reconcilia una vez (4214.5606ms)
+  ✔ Interbancaria aceptación y rechazo verificables (180.3651ms)
+  ✔ Reinicio durante resultado incierto conserva operación y permite recuperación (10114.9147ms)
+  ✔ Historial financiero cuadra con saldo y actor registrado (32.019ms)
+  ✔ Dos débitos concurrentes no producen sobregiro (111.3091ms)
+  ✔ CRUD de préstamos, cuota tasa cero y transiciones autorizadas (362.2574ms)
+  ✔ Baja con obligaciones rechazada; cuenta cero cierra y baja lógica conserva historial (349.5623ms)
+  ✔ Restablecer credenciales invalida sesión y restituye cambio obligatorio (915.4812ms)
+  ✔ Indisponibilidad externa devuelve error, sin éxito falso (11579.7956ms)
+  ✔ Reinicio de Cuentas conserva saldos y movimientos (6035.4979ms)
+✔ CHUNO · verificación bancaria integrada (43312.9984ms)
+ℹ tests 27
+ℹ suites 0
+ℹ pass 27
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 43446.9494

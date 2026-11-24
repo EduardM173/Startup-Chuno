@@ -1,0 +1,31 @@
+services:
+  clientes:
+    volumes:
+      - ./shared:/app/shared:ro
+      - ./services/clientes/src:/app/services/clientes/src:ro
+      - ./scripts:/app/scripts:ro
+  cuentas:
+    volumes:
+      - ./shared:/app/shared:ro
+      - ./services/cuentas/src:/app/services/cuentas/src:ro
+      - ./scripts:/app/scripts:ro
+  pagos:
+    volumes:
+      - ./shared:/app/shared:ro
+      - ./services/pagos/src:/app/services/pagos/src:ro
+      - ./scripts:/app/scripts:ro
+  transferencias:
+    volumes:
+      - ./shared:/app/shared:ro
+      - ./services/transferencias/src:/app/services/transferencias/src:ro
+      - ./scripts:/app/scripts:ro
+  prestamos:
+    volumes:
+      - ./shared:/app/shared:ro
+      - ./services/prestamos/src:/app/services/prestamos/src:ro
+      - ./scripts:/app/scripts:ro
+  sandbox:
+    volumes:
+      - ./shared:/app/shared:ro
+      - ./infrastructure/sandbox/src:/app/infrastructure/sandbox/src:ro
+      - ./scripts:/app/scripts:ro

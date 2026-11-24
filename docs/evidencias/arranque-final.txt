@@ -1,0 +1,7 @@
+clientes: saludable
+cuentas: saludable
+pagos: saludable
+transferencias: saludable
+prestamos: saludable
+Seed final idempotente: mismos clientes, cuentas, saldos y préstamos.
+Estado persistente: 12 clientes, 17 cuentas y 11 préstamos (incluye registros de pruebas).
