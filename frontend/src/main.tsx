@@ -1,28 +1,81 @@
-import {Profile} from './components/Profile';
-import {Login} from './components/Login';
-import {useEffect,useState} from 'react';
-import {createRoot} from 'react-dom/client';
-import {type LucideIcon,Landmark,LayoutDashboard,Users,WalletCards,ReceiptText,ArrowLeftRight,HandCoins,LogOut,ShieldCheck,Menu,UserRound,KeyRound,ChevronRight} from 'lucide-react';
-import {api,setToken,bs,type Row} from './api/client';
-import {Form,Modal,Table} from './components/UI';
-import {Clientes} from './modules/clientes/Clientes';
-import {Movimientos} from './modules/cuentas/Movimientos';
-import {Cuentas} from './modules/cuentas/Cuentas';
-import {Pagos} from './modules/pagos/Pagos';
-import {Transferencias} from './modules/transferencias/Transferencias';
-import {Prestamos} from './modules/prestamos/Prestamos';
+import { MyAccounts } from './modules/cuentas/MyAccounts';
+import { CashDesk } from './modules/cuentas/CashDesk';
+import { Profile } from './components/Profile';
+import { Login } from './components/Login';
+import { useEffect, useState } from 'react';
+import { createRoot } from 'react-dom/client';
+import { type LucideIcon, Landmark, LayoutDashboard, Users, WalletCards, ReceiptText, ArrowLeftRight, HandCoins, LogOut, ShieldCheck, Menu, UserRound, KeyRound, ChevronRight, Home, CreditCard, Coins, Calendar, ChevronDown } from 'lucide-react';
+import { api, setToken, bs, type Row } from './api/client';
+import { Form, Modal, Table } from './components/UI';
+import { Clientes } from './modules/clientes/Clientes';
+import { Movimientos } from './modules/cuentas/Movimientos';
+import { Cuentas } from './modules/cuentas/Cuentas';
+import { Pagos } from './modules/pagos/Pagos';
+import { Transferencias } from './modules/transferencias/Transferencias';
+import { Prestamos } from './modules/prestamos/Prestamos';
+import { AdminDashboard } from './components/AdminDashboard';
 import './style.css';
-function App(){
- const [user,setUser]=useState<Row|null>(null),[page,setPage]=useState('inicio'),[data,setData]=useState<Row>({clients:[],accounts:[],payments:[],transfers:[],loans:[]}),[message,setMessage]=useState(''),[loading,setLoading]=useState(false),[menu,setMenu]=useState(false);
- const admin=user?.role==='ADMIN';const notify=(m:string)=>setMessage(m);
- async function refresh(){setLoading(true);try{const [accounts,payments,transfers,loans,clients]=await Promise.all([api('cuentas','/accounts'),api('pagos','/transactions'),api('transferencias','/transactions'),api('prestamos','/loans'),admin?api('clientes','/clients'):Promise.resolve([])]);setData({accounts,payments,transfers,loans,clients})}catch(e){notify((e as Error).message)}finally{setLoading(false)}}
- useEffect(()=>{if(user&&!user.mustChangePassword)void refresh()},[user?.id]);
- async function logout(){try{await api('clientes','/auth/logout','POST')}catch(e){notify((e as Error).message)}setToken('');setUser(null);setData({clients:[],accounts:[],payments:[],transfers:[],loans:[]});setPage('inicio');}
- if(!user)return <Login onLogin={async b=>{const r=await api('clientes','/auth/login','POST',b);setToken(r.token);setUser(r.user);setMessage('')}}/>;
- if(user.mustChangePassword)return <div className="login-form" style={{minHeight:'100vh'}}><div className="login-box"><h2>Protege tu acceso digital</h2><p>Antes de operar, reemplaza la contraseña temporal entregada por el administrador.</p><Form fields={[{name:'current',label:'Contraseña temporal',type:'password'},{name:'password',label:'Nueva contraseña (mínimo 10 caracteres)',type:'password'}]} submit="Cambiar contraseña y volver a ingresar" onSubmit={async b=>{await api('clientes','/auth/password','POST',b);setToken('');setUser(null);setPage('inicio')}}/><button className="link" onClick={logout}>Cerrar sesión</button></div></div>;
- const nav:[string,string,LucideIcon][]=[['inicio','Inicio',LayoutDashboard],...(admin?[['clientes','Clientes',Users]]:[]),['cuentas',admin?'Cuentas bancarias':'Mis cuentas',WalletCards],...(admin?[['caja','Depósitos y retiros',Landmark],['operaciones','Operaciones',ReceiptText]]:[['movimientos','Movimientos',ReceiptText],['transferencias','Transferencias',ArrowLeftRight],['pagos','Pago de servicios',ReceiptText]]),['prestamos',admin?'Préstamos':'Mis préstamos',HandCoins],['perfil','Mi perfil',UserRound]] as [string,string,LucideIcon][];
- const total=data.accounts.reduce((s:number,a:Row)=>s+Number(a.balance)-Number(a.reserved),0);
- const common={refresh,notify};
- return <div className={page==='perfil'?'app profile-view':'app'}><aside className={menu?'sidebar open':'sidebar'}><div className="brand"><Landmark size={27}/><span>CHUNO<span className="brand-dot">.</span></span></div><span className="nav-caption">BANCA POR INTERNET</span><nav>{nav.map(([key,label,Icon])=><button key={key} className={page===key?'active':''} onClick={()=>{setPage(key);setMenu(false);setMessage('')}}><Icon size={20}/>{label}</button>)}</nav><div className="sidebar-bottom"><div className="sandbox-pill"><ShieldCheck size={17}/> Entorno académico</div><small>Construido para aprender.<br/>Operaciones externas de prueba.</small><button onClick={logout}><LogOut size={18}/>Cerrar sesión</button></div></aside><div className="main-shell"><header className="topbar"><button className="icon mobile-menu" aria-label="Abrir menú" onClick={()=>setMenu(!menu)}><Menu/></button><div className="breadcrumb">Mi banca <ChevronRight size={14}/><strong>{nav.find(n=>n[0]===page)?.[1]}</strong></div><button className="user-chip" onClick={()=>setPage('perfil')}><span className="avatar">{user.names[0]}{user.surnames[0]}</span><span>{user.names} {user.surnames}<small>{admin?'Administrador':'Cliente CHUNO'}</small></span></button></header><main className="content">{message&&<div role="status" className="notice"><span>{message}</span><button className="link" onClick={()=>setMessage('')}>Cerrar</button></div>}{loading&&<p role="status" className="loading">Actualizando información…</p>}{page==='perfil'&&<Profile user={user} onUpdate={setUser} onPasswordChanged={()=>{setToken('');setUser(null);setPage('inicio')}}/>}{page==='inicio'&&<><div className="section-heading"><div><span className="eyebrow">TU ESPACIO FINANCIERO</span><h1>Hola, {user.names.split(' ')[0]}.</h1><p>{admin?'Una vista clara para gestionar CHUNO.':'Tu dinero y tus próximos pasos, en un solo lugar.'}</p></div><span className="today">{new Date().toLocaleDateString('es-BO',{day:'numeric',month:'long',year:'numeric'})}</span></div><section className="overview"><div className="total-card"><span>{admin?'Saldo disponible de cuentas registradas':'Tu saldo disponible'}</span><strong>{bs(total)}</strong><small>{data.accounts.filter((a:Row)=>a.status==='ACTIVA').length} cuentas de ahorro activas · Bolivianos</small><button onClick={()=>setPage('cuentas')}>Ver {admin?'cuentas':'mis cuentas'} <WalletCards size={18}/></button></div><div className="metric-card"><span className="metric-icon"><ReceiptText/></span><span>{admin?'Clientes registrados':'Pagos realizados'}</span><strong>{admin?data.clients.length:data.payments.filter((p:Row)=>p.status==='CONFIRMADO').length}</strong><small>{admin?'Información desde Clientes':'Operaciones confirmadas'}</small></div><div className="metric-card"><span className="metric-icon"><HandCoins/></span><span>Solicitudes de préstamo</span><strong>{data.loans.length}</strong><small>{data.loans.filter((l:Row)=>['SOLICITADO','EN_REVISION'].includes(l.status)).length} en solicitud o revisión</small></div></section><div className="section-heading compact"><h2>¿Qué necesitas hacer?</h2></div><div className="quick-grid">{(admin?[['clientes','Gestionar clientes','Información y acceso',Users],['cuentas','Administrar cuentas','Depósitos y retiros',WalletCards],['prestamos','Revisar préstamos','Solicitudes y decisiones',HandCoins]]:[['pagos','Pagar un servicio','Electricidad, agua y más',ReceiptText],['transferencias','Transferir dinero','Entre cuentas y a otros bancos',ArrowLeftRight],['prestamos','Solicitar un préstamo','Consulta tus posibilidades',HandCoins]]).map(([key,title,sub,Icon]:any)=><button className="quick-card" key={key} onClick={()=>setPage(key)}><Icon/><div><strong>{title}</strong><small>{sub}</small></div><ChevronRight size={18}/></button>)}</div><section className="panel"><div className="section-heading compact"><div><h2>Operaciones recientes</h2><p>Pagos y transferencias registrados en tus servicios.</p></div><button className="link" onClick={()=>setPage('transferencias')}>Ver transferencias</button></div><Table rows={[...data.payments,...data.transfers].sort((a,b)=>b.createdAt.localeCompare(a.createdAt)).slice(0,5)} columns={[["createdAt","Fecha"],["kind","Operación"],["amount","Importe"],["status","Estado"]]}/></section></>}{page==='clientes'&&admin&&<Clientes rows={data.clients} {...common}/>} {['cuentas','caja'].includes(page)&&<Cuentas rows={data.accounts} clients={data.clients} admin={admin} {...common}/>} {page==='movimientos'&&<Movimientos accounts={data.accounts} notify={notify}/>} {(page==='pagos'||page==='operaciones')&&<Pagos rows={data.payments} accounts={data.accounts} admin={admin} {...common}/>} {(page==='transferencias'||page==='operaciones')&&<Transferencias rows={data.transfers} accounts={data.accounts} admin={admin} user={user} onNavigate={setPage} {...common}/>} {page==='prestamos'&&<Prestamos rows={data.loans} clients={data.clients} admin={admin} {...common}/>}<footer className="page-footer"><span>CHUNO · Banca por internet</span><span>SANDBOX · Demostración académica</span></footer></main></div></div>;
+import './components/admin.css';
+
+function App() {
+    const [operationSource, setOperationSource] = useState('');
+    const [user, setUser] = useState<Row | null>(null), [page, setPage] = useState('inicio'), [data, setData] = useState<Row>({ clients: [], accounts: [], payments: [], transfers: [], loans: [] }), [message, setMessage] = useState(''), [loading, setLoading] = useState(false), [menu, setMenu] = useState(false);
+    const admin = user?.role === 'ADMIN'; const notify = (m: string) => setMessage(m);
+    async function refresh() { setLoading(true); try { const [accounts, payments, transfers, loans, clients] = await Promise.all([api('cuentas', '/accounts'), api('pagos', '/transactions'), api('transferencias', '/transactions'), api('prestamos', '/loans'), admin ? api('clientes', '/clients') : Promise.resolve([])]); setData({ accounts, payments, transfers, loans, clients }) } catch (e) { notify((e as Error).message) } finally { setLoading(false) } }
+    useEffect(() => { if (user && !user.mustChangePassword) void refresh() }, [user?.id]);
+    async function logout() { setOperationSource(''); try { await api('clientes', '/auth/logout', 'POST') } catch (e) { notify((e as Error).message) } setToken(''); setUser(null); setData({ clients: [], accounts: [], payments: [], transfers: [], loans: [] }); setPage('inicio'); }
+    if (!user) return <Login onLogin={async b => { const r = await api('clientes', '/auth/login', 'POST', b); setToken(r.token); setUser(r.user); setMessage('') }} />;
+    if (user.mustChangePassword) return <div className="login-form" style={{ minHeight: '100vh' }}><div className="login-box"><h2>Protege tu acceso digital</h2><p>Antes de operar, reemplaza la contraseña temporal entregada por el administrador.</p><Form fields={[{ name: 'current', label: 'Contraseña temporal', type: 'password' }, { name: 'password', label: 'Nueva contraseña (mínimo 10 caracteres)', type: 'password' }]} submit="Cambiar contraseña y volver a ingresar" onSubmit={async b => { await api('clientes', '/auth/password', 'POST', b); setToken(''); setUser(null); setPage('inicio') }} /><button className="link" onClick={logout}>Cerrar sesión</button></div></div>;
+    const nav: [string, string, LucideIcon][] = [['inicio', 'Inicio', admin ? Home : LayoutDashboard], ...(admin ? [['clientes', 'Clientes', Users]] : []), ['cuentas', admin ? 'Cuentas bancarias' : 'Mis cuentas', admin ? CreditCard : WalletCards], ...(admin ? [['caja', 'Depósitos y retiros', Coins], ['operaciones', 'Operaciones', ArrowLeftRight]] : [['movimientos', 'Movimientos', ReceiptText], ['transferencias', 'Transferencias', ArrowLeftRight], ['pagos', 'Pago de servicios', ReceiptText]]), ['prestamos', admin ? 'Préstamos' : 'Mis préstamos', HandCoins], ['perfil', 'Mi perfil', UserRound]] as [string, string, LucideIcon][];
+    const total = data.accounts.reduce((s: number, a: Row) => s + Number(a.balance) - Number(a.reserved), 0);
+    const common = { refresh, notify };
+    const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'], now = new Date(), adminDate = `${now.getDate()} ${months[now.getMonth()]}. ${now.getFullYear()}`, pageLabel = nav.find(n => n[0] === page)?.[1];
+
+    return (
+        <div className={`app${admin ? ' admin-ui' : ''}${page === 'perfil' ? ' profile-view' : ''}`}>
+            <aside className={menu ? 'sidebar open' : 'sidebar'}>
+                {admin
+                    ? <div className="adm-brand"><img src="/images/chuno-logo.png" alt="CHUNO · Banca por internet" /></div>
+                    : <><div className="brand"><Landmark size={27} /><span>CHUNO<span className="brand-dot">.</span></span></div><span className="nav-caption">BANCA POR INTERNET</span></>
+                }
+                <nav>{nav.map(([key, label, Icon]) => <button key={key} className={page === key ? 'active' : ''} onClick={() => { setOperationSource(''); setPage(key); setMenu(false); setMessage('') }}><Icon size={20} />{label}</button>)}</nav>
+                <div className="sidebar-bottom">
+                    {!admin && <><div className="sandbox-pill"><ShieldCheck size={17} /> Entorno académico</div><small>Construido para aprender.<br />Operaciones externas de prueba.</small></>}
+                    <button onClick={logout}><LogOut size={18} />Cerrar sesión</button>
+                </div>
+            </aside>
+            <div className="main-shell">
+                <header className="topbar">
+                    <button className="icon mobile-menu" aria-label="Abrir menú" onClick={() => setMenu(!menu)}><Menu /></button>
+                    {admin
+                        ? <><div className="adm-title"><h1>{page === 'inicio' ? 'Panel administrativo' : pageLabel}</h1><p>{page === 'inicio' ? 'Resumen de la actividad bancaria.' : 'Panel administrativo'}</p></div><div className="adm-top-right"><span className="adm-date"><Calendar size={28} strokeWidth={1.6} />{adminDate}</span><button className="user-chip adm-user" onClick={() => setPage('perfil')}><span className="avatar">AD</span><span><strong>Administrador</strong><small>ADMIN</small></span><ChevronDown size={22} /></button></div></>
+                        : <><div className="breadcrumb">Mi banca <ChevronRight size={14} /><strong>{nav.find(n => n[0] === page)?.[1]}</strong></div><button className="user-chip" onClick={() => setPage('perfil')}><span className="avatar">{user.names[0]}{user.surnames[0]}</span><span>{user.names} {user.surnames}<small>{admin ? 'Administrador' : 'Cliente CHUNO'}</small></span></button></>
+                    }
+                </header>
+                <main className="content">
+                    {message && <div role="status" className="notice"><span>{message}</span><button className="link" onClick={() => setMessage('')}>Cerrar</button></div>}
+                    {loading && <p role="status" className="loading">Actualizando información…</p>}
+                    {page === 'perfil' && <Profile user={user} onUpdate={setUser} onPasswordChanged={() => { setToken(''); setUser(null); setPage('inicio') }} />}
+                    {page === 'inicio' && admin && <AdminDashboard data={data} go={p => { setPage(p); setMessage('') }} />}
+                    {page === 'inicio' && !admin && <>
+                        <div className="section-heading"><div><span className="eyebrow">TU ESPACIO FINANCIERO</span><h1>Hola, {user.names.split(' ')[0]}.</h1><p>{admin ? 'Una vista clara para gestionar CHUNO.' : 'Tu dinero y tus próximos pasos, en un solo lugar.'}</p></div><span className="today">{new Date().toLocaleDateString('es-BO', { day: 'numeric', month: 'long', year: 'numeric' })}</span></div>
+                        <section className="overview"><div className="total-card"><span>{admin ? 'Saldo disponible de cuentas registradas' : 'Tu saldo disponible'}</span><strong>{bs(total)}</strong><small>{data.accounts.filter((a: Row) => a.status === 'ACTIVA').length} cuentas de ahorro activas · Bolivianos</small><button onClick={() => setPage('cuentas')}>Ver {admin ? 'cuentas' : 'mis cuentas'} <WalletCards size={18} /></button></div><div className="metric-card"><span className="metric-icon"><ReceiptText /></span><span>{admin ? 'Clientes registrados' : 'Pagos realizados'}</span><strong>{admin ? data.clients.length : data.payments.filter((p: Row) => p.status === 'CONFIRMADO').length}</strong><small>{admin ? 'Información desde Clientes' : 'Operaciones confirmadas'}</small></div><div className="metric-card"><span className="metric-icon"><HandCoins /></span><span>Solicitudes de préstamo</span><strong>{data.loans.length}</strong><small>{data.loans.filter((l: Row) => ['SOLICITADO', 'EN_REVISION'].includes(l.status)).length} en solicitud o revisión</small></div></section>
+                        <div className="section-heading compact"><h2>¿Qué necesitas hacer?</h2></div>
+                        <div className="quick-grid">{(admin ? [['clientes', 'Gestionar clientes', 'Información y acceso', Users], ['cuentas', 'Administrar cuentas', 'Depósitos y retiros', WalletCards], ['prestamos', 'Revisar préstamos', 'Solicitudes y decisiones', HandCoins]] : [['pagos', 'Pagar un servicio', 'Electricidad, agua y más', ReceiptText], ['transferencias', 'Transferir dinero', 'Entre cuentas y a otros bancos', ArrowLeftRight], ['prestamos', 'Solicitar un préstamo', 'Consulta tus posibilidades', HandCoins]]).map(([key, title, sub, Icon]: any) => <button className="quick-card" key={key} onClick={() => setPage(key)}><Icon /><div><strong>{title}</strong><small>{sub}</small></div><ChevronRight size={18} /></button>)}</div>
+                        <section className="panel"><div className="section-heading compact"><div><h2>Operaciones recientes</h2><p>Pagos y transferencias registrados en tus servicios.</p></div><button className="link" onClick={() => setPage('transferencias')}>Ver transferencias</button></div><Table rows={[...data.payments, ...data.transfers].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 5)} columns={[["createdAt", "Fecha"], ["kind", "Operación"], ["amount", "Importe"], ["status", "Estado"]]} /></section>
+                    </>}
+                    {page === 'clientes' && admin && <Clientes rows={data.clients} {...common} />}
+                    {page === 'cuentas' && (admin ? <Cuentas rows={data.accounts} clients={data.clients} admin={admin} {...common} /> : <MyAccounts rows={data.accounts} {...common} onNavigate={(target, accountId) => { setOperationSource(accountId); setMessage(''); setPage(target) }} />)}
+                    {page === 'caja' && admin && <CashDesk accounts={data.accounts} clients={data.clients} {...common} />}
+                    {page === 'movimientos' && <Movimientos accounts={data.accounts} notify={notify} />}
+                    {(page === 'pagos' || page === 'operaciones') && <Pagos initialAccountId={operationSource} rows={data.payments} accounts={data.accounts} admin={admin} {...common} />}
+                    {(page === 'transferencias' || page === 'operaciones') && <Transferencias rows={data.transfers} accounts={data.accounts} admin={admin} user={user} onNavigate={setPage} {...common} />}
+                    {page === 'prestamos' && <Prestamos rows={data.loans} clients={data.clients} admin={admin} {...common} />}
+                    {admin ? <footer className="page-footer"><span>Entorno académico · Datos de demostración</span></footer> : <footer className="page-footer"><span>CHUNO · Banca por internet</span><span>SANDBOX · Demostración académica</span></footer>}
+                </main>
+            </div>
+        </div>
+    );
 }
-createRoot(document.getElementById('root')!).render(<App/>);
+
+createRoot(document.getElementById('root')!).render(<App />);
