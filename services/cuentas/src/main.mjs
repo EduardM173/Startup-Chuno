@@ -44,7 +44,8 @@ async function financial(b){
 
    const d=await tx.account.update({where:{id:dest.id},data:{balance:{increment:b.amount}}});
 
-   await movement(tx,a,b.operationId,'DEBITO',amount.negated(),'Transferencia interna',b.actorId);await movement(tx,d,b.operationId,'CREDITO',amount,'Transferencia interna',b.actorId);
+   const desc=b.description||'Transferencia interna';
+   await movement(tx,a,b.operationId,'DEBITO',amount.negated(),desc,b.actorId);await movement(tx,d,b.operationId,'CREDITO',amount,desc,b.actorId);
 
   }else if(b.kind==='RESERVA'){
 
@@ -66,7 +67,7 @@ async function financial(b){
 
 }
 
-const operation=z.object({operationId:id,actorId:id,accountId:id,clientId:id,amount:money,kind:z.enum(['TRANSFERENCIA','RESERVA']),destinationId:id.optional()}).strict().superRefine((b,c)=>{if(b.kind==='TRANSFERENCIA'&&!b.destinationId)c.addIssue({code:'custom',message:'Cuenta destino requerida'});});
+const operation=z.object({operationId:id,actorId:id,accountId:id,clientId:id,amount:money,kind:z.enum(['TRANSFERENCIA','RESERVA']),destinationId:id.optional(),description:z.string().max(150).optional()}).strict().superRefine((b,c)=>{if(b.kind==='TRANSFERENCIA'&&!b.destinationId)c.addIssue({code:'custom',message:'Cuenta destino requerida'});});
 
 app.post('/internal/operations',internal,async(req,res)=>res.json(await financial(operation.parse(req.body))));
 
