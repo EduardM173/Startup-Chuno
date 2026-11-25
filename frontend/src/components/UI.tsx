@@ -1,7 +1,7 @@
 import {useState, type FormEvent, type ReactNode} from 'react';
 import { X, CheckCircle2, AlertCircle, LoaderCircle } from 'lucide-react';
 import {bs,date,type Row} from '../api/client';
-export function Badge({value}:{value:string}){return <span className={`badge ${['ACTIVA','CONFIRMADO','APROBADO'].includes(value)?'good':['RECHAZADO','REVERTIDO','CERRADA','CANCELADO'].includes(value)?'bad':'pending'}`}>{value.replaceAll('_',' ')}</span>}
+export function Badge({value}:{value:string}){return <span className={`badge ${['ACTIVO','ACTIVA','CONFIRMADO','APROBADO'].includes(value)?'good':['RECHAZADO','REVERTIDO','CERRADA','CANCELADO'].includes(value)?'bad':'pending'}`}>{value.replaceAll('_',' ')}</span>}
 export function Empty({text='Aún no hay registros para mostrar.'}:{text?:string}){return <div className="empty">{text}</div>}
 export function Table({rows,columns,onSelect}:{rows:Row[],columns:[string,string][],onSelect?:(row:Row)=>void}){return rows.length?<div className="table-wrap"><table><thead><tr>{columns.map(([key,label])=><th key={key}>{label}</th>)}{onSelect&&<th>Acción</th>}</tr></thead><tbody>{rows.map(r=><tr key={r.id}>{columns.map(([k])=><td key={k}>{['status'].includes(k)?<Badge value={r[k]}/>:['amount','balance','installment','reserved','balanceAfter'].includes(k)?bs(r[k]):k==='createdAt'?date(r[k]):k==='active'?r.deleted?'Baja lógica':r.active?'Activo':'Inactivo':String(r[k]??'—')}</td>)}{onSelect&&<td><button className="link" onClick={()=>onSelect(r)}>Ver detalle</button></td>}</tr>)}</tbody></table></div>:<Empty/>}
 export type Field={name:string,label:string,type?:string,value?:string|number,options?:{value:string,label:string}[],required?:boolean,min?:string,max?:string,step?:string};
