@@ -8,7 +8,7 @@ import {Login} from './components/Login';
 import {useEffect,useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import {type LucideIcon,Landmark,LayoutDashboard,Users,WalletCards,ReceiptText,ArrowLeftRight,HandCoins,LogOut,ShieldCheck,Menu,UserRound,KeyRound,ChevronRight} from 'lucide-react';
-import {api,setToken,bs,type Row} from './api/client';
+import {api,setToken,getToken,ApiError,bs,type Row} from './api/client';
 import {Form,Modal,Table} from './components/UI';
 import {Clientes} from './modules/clientes/Clientes';
 import {Movimientos} from './modules/cuentas/Movimientos';
@@ -21,6 +21,9 @@ import './components/admin.css';
 import './components/shell-theme.css';
 function App(){
 
+ const [restoring,setRestoring]=useState(!!getToken()),[restoreError,setRestoreError]=useState('');
+ async function restoreSession(){setRestoring(true);setRestoreError('');try{setUser(await api('clientes','/me'))}catch(e){if(e instanceof ApiError&&e.status===401)setToken('');else setRestoreError('No se pudo verificar tu sesión. Revisa la conexión y vuelve a intentar.')}finally{setRestoring(false)}}
+ useEffect(()=>{if(getToken())void restoreSession();const expired=()=>{setUser(null);setData({clients:[],accounts:[],payments:[],transfers:[],loans:[]});setPage('inicio');setRestoreError('')};window.addEventListener('chuno:session-expired',expired);return()=>window.removeEventListener('chuno:session-expired',expired)},[]);
  const [loanRequest,setLoanRequest]=useState(false);
  const [operationSource,setOperationSource]=useState('');
  const [user,setUser]=useState<Row|null>(null),[page,setPage]=useState('inicio'),[data,setData]=useState<Row>({clients:[],accounts:[],payments:[],transfers:[],loans:[]}),[message,setMessage]=useState(''),[loading,setLoading]=useState(false),[menu,setMenu]=useState(false);
@@ -28,6 +31,7 @@ function App(){
  async function refresh(){setLoading(true);try{const [accounts,payments,transfers,loans,clients]=await Promise.all([api('cuentas','/accounts'),api('pagos','/transactions'),api('transferencias','/transactions'),api('prestamos','/loans'),admin?api('clientes','/clients'):Promise.resolve([])]);setData({accounts,payments,transfers,loans,clients})}catch(e){notify((e as Error).message)}finally{setLoading(false)}}
  useEffect(()=>{if(user&&!user.mustChangePassword)void refresh()},[user?.id]);
  async function logout(){setLoanRequest(false);setOperationSource('');try{await api('clientes','/auth/logout','POST')}catch(e){notify((e as Error).message)}setToken('');setUser(null);setData({clients:[],accounts:[],payments:[],transfers:[],loans:[]});setPage('inicio');}
+ if(restoring||restoreError)return <main className="session-restoring"><div role="status"><h1>{restoring?'Verificando tu sesión…':'Conexión interrumpida'}</h1>{restoreError&&<><p>{restoreError}</p><button onClick={()=>void restoreSession()}>Reintentar</button><button onClick={()=>{setToken('');setRestoreError('')}}>Volver al inicio de sesión</button></>}</div></main>;
  if(!user)return <Login onLogin={async b=>{const r=await api('clientes','/auth/login','POST',b);setToken(r.token);setLoading(true);setUser(r.user);setMessage('')}}/>;
  if(user.mustChangePassword)return <div className="login-form temporary-access" style={{minHeight:'100vh'}}><div className="login-box"><h2>Protege tu acceso digital</h2><p>Antes de operar, reemplaza la contraseña temporal entregada por el administrador.</p><Form fields={[{name:'current',label:'Contraseña temporal',type:'password'},{name:'password',label:'Nueva contraseña (mínimo 10 caracteres)',type:'password'}]} submit="Cambiar contraseña y volver a ingresar" onSubmit={async b=>{await api('clientes','/auth/password','POST',b);setToken('');setUser(null);setPage('inicio')}}/><button className="link" onClick={logout}>Cerrar sesión</button></div></div>;
  const nav:[string,string,LucideIcon][]=[['inicio','Inicio',LayoutDashboard],...(admin?[['clientes','Clientes',Users]]:[]),['cuentas',admin?'Cuentas bancarias':'Mis cuentas',WalletCards],...(admin?[['caja','Depósitos y retiros',Landmark],['operaciones','Operaciones',ReceiptText]]:[['movimientos','Movimientos',ReceiptText],['transferencias','Transferencias',ArrowLeftRight],['pagos','Pago de servicios',ReceiptText]]),['prestamos',admin?'Préstamos':'Mis préstamos',HandCoins],['perfil','Mi perfil',UserRound]] as [string,string,LucideIcon][];
