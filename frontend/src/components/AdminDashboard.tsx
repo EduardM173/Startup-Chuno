@@ -15,7 +15,7 @@ const statusText=(s:string,t:string)=>t==='ok'?'Confirmado':t==='wait'?'Pendient
 
 function Status({value}:{value:string}){const t=tone(value);return <span className={`adm-status ${t}`}>{t==='ok'?<Check size={18}/>:t==='wait'?<Clock size={18}/>:<X size={18}/>}{statusText(value,t)}</span>}
 
-export function AdminDashboard({data,go}:{data:Row,go:(page:string)=>void}){
+export function AdminDashboard({data,go}:{data:Row,go:(page:string,action?:string)=>void}){
  const [cash,setCash]=useState<Row[]>([]);
  useEffect(()=>{
   let alive=true;
@@ -56,11 +56,11 @@ export function AdminDashboard({data,go}:{data:Row,go:(page:string)=>void}){
    </section>
   </div>
   <aside className="adm-side">
-   <section className="adm-card"><h2 className="adm-side-title"><Zap size={30} strokeWidth={1.5}/>Accesos rápidos</h2><div className="adm-card-body">{quick.map(([key,label,Icon])=><button key={key} className="adm-quick" onClick={()=>go(key)}><Icon size={24} strokeWidth={1.7}/>{label}</button>)}</div></section>
+   <section className="adm-card"><h2 className="adm-side-title"><Zap size={30} strokeWidth={1.5}/>Accesos rápidos</h2><div className="adm-card-body">{quick.map(([key,label,Icon])=><button key={key} className="adm-quick" onClick={()=>go(key,key==='clientes'||key==='cuentas'?'create':key==='caja'?'cash':'pending')}><Icon size={24} strokeWidth={1.7}/>{label}</button>)}</div></section>
    <section className="adm-card"><h2 className="adm-side-title"><AlertCircle size={30} strokeWidth={1.5}/>Atención pendiente</h2><div className="adm-card-body">
-    <button className="adm-attn" onClick={()=>go('prestamos')}><ClipboardList size={24} strokeWidth={1.6}/><span>{loansPending?`${loansPending} solicitud${loansPending===1?'':'es'} de préstamo`:'Sin solicitudes de préstamo'}</span><ChevronRight size={20}/></button>
-    <button className="adm-attn" onClick={()=>go('operaciones')}><ArrowLeftRight size={24} strokeWidth={1.6}/><span>{transfersPending?`${transfersPending} transferencia${transfersPending===1?'':'s'} pendiente${transfersPending===1?'':'s'}`:'Sin transferencias pendientes'}</span><ChevronRight size={20}/></button>
-    <div className="adm-attn-links"><button className="adm-link small" onClick={()=>go('prestamos')}>Revisar préstamos <ArrowRight size={16}/></button><button className="adm-link small" onClick={()=>go('operaciones')}>Ver operaciones <ArrowRight size={16}/></button></div>
+    <button className="adm-attn" onClick={()=>go('prestamos','pending')}><ClipboardList size={24} strokeWidth={1.6}/><span>{loansPending?`${loansPending} solicitud${loansPending===1?'':'es'} de préstamo`:'Sin solicitudes de préstamo'}</span><ChevronRight size={20}/></button>
+    <button className="adm-attn" onClick={()=>go('operaciones','pending-transfers')}><ArrowLeftRight size={24} strokeWidth={1.6}/><span>{transfersPending?`${transfersPending} transferencia${transfersPending===1?'':'s'} pendiente${transfersPending===1?'':'s'}`:'Sin transferencias pendientes'}</span><ChevronRight size={20}/></button>
+    <div className="adm-attn-links"><button className="adm-link small" onClick={()=>go('prestamos','pending')}>Revisar préstamos <ArrowRight size={16}/></button><button className="adm-link small" onClick={()=>go('operaciones')}>Ver operaciones <ArrowRight size={16}/></button></div>
    </div></section>
   </aside>
  </div>;
