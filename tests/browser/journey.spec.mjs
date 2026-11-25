@@ -7,7 +7,7 @@ async function close(page){await page.getByRole('button',{name:'Cerrar',exact:tr
 async function api(service,path,token,body,method='GET'){const r=await fetch(`http://localhost:8080/api/${service}${path}`,{method,headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:body?JSON.stringify(body):undefined});const b=await r.json();if(!r.ok)throw new Error(b.error);return b;}
 test('Recorridos reales ADMIN y CLIENTE, cinco módulos y evidencias',async({page})=>{
  const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});page.on('requestfailed',r=>errors.push(`${r.method()} ${r.url()} ${r.failure()?.errorText}`));page.on('dialog',d=>d.accept());
- await page.goto('/');await shot(page,'01-login');await login(page,'admin@chuno.demo','AdminChuno2026!');await expect(page.getByRole('heading',{name:'Hola, Administración.'})).toBeVisible();await shot(page,'02-inicio-admin');
+ await page.goto('/');await shot(page,'01-login');await login(page,'admin@chuno.demo','AdminChuno2026!');await expect(page.getByRole('heading',{name:'Panel administrativo'})).toBeVisible();await shot(page,'02-inicio-admin');
  const suffix=Date.now(),email=`visual-${suffix}@chuno.demo`,document=`VIS-${suffix}`;
  await page.getByRole('button',{name:'Clientes',exact:true}).click();await page.getByRole('button',{name:'Nuevo cliente',exact:true}).click();
  for(const [label,value] of [['Documento de identidad',document],['Nombres','Elena'],['Apellidos','Prueba Visual'],['Correo electrónico',email],['Teléfono','70000099'],['Dirección','Calle Visual 321']])await page.getByLabel(label,{exact:true}).fill(value);
