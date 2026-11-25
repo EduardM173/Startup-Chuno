@@ -40,9 +40,11 @@ export function coordinator(name,db){
 
      if(o.kind==='PROPIA'&&dest.clientId!==o.clientId)fail(422,'La cuenta destino debe ser propia');
 
+     if(o.kind==='PROPIA'&&dest.status!=='ACTIVA')fail(409,'La cuenta destino no está activa');
+
      if(o.kind==='TERCERO'&&dest.clientId===o.clientId)fail(422,'Seleccione transferencia entre cuentas propias');
 
-     const accountResult=prior||await call('cuentas','/internal/operations',{method:'POST',body:{operationId:o.id,accountId:o.accountId,clientId:o.clientId,amount:o.amount.toFixed(2),actorId:o.actorId,kind:'TRANSFERENCIA',destinationId:o.destination}});
+     const accountResult=prior||await call('cuentas','/internal/operations',{method:'POST',body:{operationId:o.id,accountId:o.accountId,clientId:o.clientId,amount:o.amount.toFixed(2),actorId:o.actorId,kind:'TRANSFERENCIA',destinationId:o.destination,description:o.reference||(o.kind==='PROPIA'?'Transferencia entre cuentas propias':'Transferencia interna')}});
 
      return await tx.transaction.update({where:{id:o.id},data:{status:accountResult.status,phase:'FINALIZADA'}});
 
