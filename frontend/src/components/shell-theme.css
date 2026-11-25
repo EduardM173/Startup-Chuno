@@ -1,0 +1,15 @@
+/* Keep the shared shell consistent while preserving the administrator dashboard. */
+.app.admin-ui,.app.profile-view{background:#fbf6f0}
+.app.admin-ui .sidebar{width:248px;background:#641d36;padding:32px 21px}
+.app.admin-ui .main-shell{margin-left:248px}
+.app.admin-ui .sidebar nav{gap:6px;margin-top:0}
+.app.admin-ui .sidebar nav button{padding:14px;font-size:.94rem;border-radius:8px;font-weight:550}
+.app.admin-ui .sidebar nav button.active{background:#c6a079;color:white;box-shadow:none;font-weight:700}
+.app.admin-ui .sidebar nav button:hover{background:#91405a}
+.app.admin-ui .topbar{background:#fbf6f0}
+.app.admin-ui .sidebar-bottom{padding:24px 10px 0;border:0;margin:auto 0 0}
+.app.admin-ui .sidebar-bottom>button{font-size:.85rem;padding:12px 0}
+@media(max-width:1150px) and (min-width:751px){.app.admin-ui .sidebar{width:210px;padding:30px 12px}.app.admin-ui .main-shell{margin-left:210px}}
+@media(max-width:750px){.app.admin-ui .sidebar{width:248px}.app.admin-ui .main-shell{margin-left:0}}
+/* Mandatory temporary-password screen uses the same CHUNO visual identity. */
+.temporary-access{background:radial-gradient(ellipse at top right,#f1dfcc,transparent 65%),#fbf6f0;color:#641d36;padding:35px 20px}.temporary-access .login-box{max-width:480px;background:#fffdfc;border:1px solid #eadde1;border-radius:24px;padding:38px;box-shadow:0 16px 48px #641d3614}.temporary-access .login-box:before{content:'';display:block;width:180px;height:100px;background:url('/images/chuno-logo.png') center/contain no-repeat;margin:0 auto 25px}.temporary-access .login-box>h2{font-size:1.8rem;text-align:center;line-height:1.2;margin:0 0 16px}.temporary-access .login-box>p{color:#78616c;font-size:.94rem;text-align:center}.temporary-access .fields{grid-template-columns:1fr;gap:20px}.temporary-access input{border-color:#c9a1b0;background:#fffcfa;color:#54162d;min-height:49px}.temporary-access .primary{background:#81223f;color:#fff;border-radius:9px;padding:15px 12px;line-height:1.5}.temporary-access .primary:hover{background:#641d36}.temporary-access .link{color:#81223f;width:100%;text-decoration:underline}.temporary-access .form{margin:28px 0 16px}@media(max-width:500px){.temporary-access .login-box{padding:28px 22px}.temporary-access .login-box>h2{font-size:1.55rem}}
